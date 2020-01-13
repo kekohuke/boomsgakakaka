@@ -1,0 +1,12 @@
+{
+  "name": "boomsgakakaka",
+  "version": "1.0.0",
+  "main": "chat_data.js",
+  "license": "MIT",
+  "dependencies": {
+    "@tensorflow-models/toxicity": "^1.2.2",
+    "@tensorflow/tfjs": "^1.5.1",
+    "@tensorflow/tfjs-node": "^1.5.1",
+    "xlsx": "^0.15.4"
+  }
+}
