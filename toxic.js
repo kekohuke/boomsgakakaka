@@ -30,12 +30,14 @@ toxicity.load(threshold).then(model => {
       // final prediction in `match` (either `true` or `false`).
       // If neither prediction exceeds the threshold, `match` is `null`.
       console.log()
-      console.log(sentences);
       //console.log(predictions[0].results[0])
-      
+      let flag = false;
       for(let i = 0; i < predictions.length; i++){
         
-        if(predictions[i].results[0]=== true){
+        if(predictions[i].results[0].match === true){
+          if(flag === false)
+            console.log(sentences)
+          flag = true;
           console.log(predictions[i].label)
         }
       }
