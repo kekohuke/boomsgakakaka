@@ -1,11 +1,13 @@
 const use = require('@tensorflow-models/universal-sentence-encoder');
+const toxicity = require('@tensorflow-models/toxicity');
 const math = require('mathjs');
 const XLSX = require("xlsx");
-var workbook = XLSX.readFile("chat_data.xlsx");
+var workbook = XLSX.readFile("chat_data_copy.xlsx");
 var obj = workbook.Sheets["Connecting to Congress Chat Dat"];
 const util = require('util')
-const threshold = 0.8;
+const threshold = 0.5;
 const useLoad = use.load(); // Load the model.
+const toxicityLoad = toxicity.load(); // Load the model.
 
 function load_csv() {
     const keys = Object.keys(obj);
@@ -35,7 +37,7 @@ async function USE_generater(sentence) {
     return data[0];
 }
 
-function USE_new_generater(sentence) {
+function USE_new_generater(question) {
     return new Promise( function(resolve) {
         let data = [];
         useLoad
@@ -68,9 +70,6 @@ let sentence_counter = 0;
 let cluster_counter = 0;
 let weight_temp = 0;
 let inserted = false;
-let result = USE_new_generater('I have a pen');
-console.log(result)
-/*
 sentences.forEach(async sentence_string => { // simulate question input one-by-one
     let temp = await USE_generater(sentence_string); // return USE value
     if (cluster.length == 0) { // if cluster is empty, create a cluster and insert first sentence.
@@ -151,10 +150,6 @@ sentences.forEach(async sentence_string => { // simulate question input one-by-o
     console.log('This is final dataset.');
     //console.log(dataset);
     console.log(util.inspect(dataset, { maxArrayLength: null }))
-    /*
-    for (i = 0; i < dataset.length; i++) {
-        if (dataset[i][0].weight !== 0)
-            console.log(dataset[i]);
-    }
-});*/
+
+});
 // console.log(cluster);
