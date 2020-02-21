@@ -68,8 +68,10 @@ let sentence_counter = 0;
 let cluster_counter = 0;
 let weight_temp = 0;
 let inserted = false;
-let result = USE_new_generater('I have a pen');
-console.log(result)
+function Usethis(){
+    return USE_new_generater('I have a pen');
+}
+console.log(Usethis())
 /*
 sentences.forEach(async sentence_string => { // simulate question input one-by-one
     let temp = await USE_generater(sentence_string); // return USE value
