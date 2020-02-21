@@ -63,93 +63,107 @@ function sum( obj ) {
     return sum;
 }
 
-const sentences = load_csv();
-const dataset = [];
-const cluster = [];
-let sentence_counter = 0;
-let cluster_counter = 0;
-let weight_temp = 0;
-let inserted = false;
-sentences.forEach(async sentence_string => { // simulate question input one-by-one
-    let temp = await USE_generater(sentence_string); // return USE value
-    if (cluster.length == 0) { // if cluster is empty, create a cluster and insert first sentence.
+function createCluster(cluster){
+    console.log('Creating a new cluster.');
+    var sentence = {};
+    sentence['string'] = sentence_string;
+    sentence['id'] = sentence_counter.toString();
+    sentence['value'] = temp;
+    sentence['weight'] = 0;
+    sentence['detail'] = {}
+    cluster_counter += 1;
+    sentence_counter += 1;
+    cluster.push(sentence);
+    return cluster;
+}
+
+class dataset{
+    constructor(){
+        this.cluster = []
+        this.dataset = [];
+        this.sentence_counter = 0
+        this.cluster_counter = 0;
+        this.weight_temp = 0;
+        this.inserted = false;
+        this.threshold = 0.5
+    }
+
+    createCluster(sentence_string,temp){
         console.log('Creating a new cluster.');
-        var sentence = {};
-        sentence['string'] = sentence_string;
-        sentence['id'] = sentence_counter.toString();
-        sentence['value'] = temp;
-        sentence['weight'] = 0;
-        sentence['detail'] = {}
-        cluster_counter += 1;
-        sentence_counter += 1;
-        cluster.push(sentence);
-        dataset.push(cluster);
-        console.log(dataset);
-    } else { // else there is at least one cluster, compare with it to determine next step
+        var sentence = {
+            string: sentence_string,
+            id: this.sentence_counter.toString(),
+            value: temp,
+            weight: 0,
+            detail: {}
+        };
+        this.cluster_counter += 1;
+        this.sentence_counter += 1;
+        this.cluster.push(sentence);
+    }
+
+    getClusterLength(){
+        return this.cluster.length;
+    }
+    getDatasetLength(){
+        return this.dataset.length;
+    }
+
+    async nextStep(sentence_string,temp){
         console.log('Adding a new sentence to a cluster.');
-        inserted = false;
-        for (i = 0; i < dataset.length && inserted === false; i++) { // for each cluster, check with leader sentence
-            weight_temp = math.dot(dataset[i][0]['value'],temp);
-            //console.log(weight_temp);
-            if (weight_temp > threshold) { // if weight_temp over 0.5, suppose they are similar
-                inserted = true;
-                //console.log('inside')
+        this.inserted = false;
+        for (let i = 0; i < this.getDatasetLength && this.inserted === false; i++) { // for each cluster, check with leader sentence
+            this.weight_temp = math.dot(this.dataset[i][0]['value'],temp);
+            if (this.weight_temp > this.threshold) { // if weight_temp over 0.5, suppose they are similar
+                this.inserted = true;
                 var sentence = {};
-                // insert a sentence
-                sentence['string'] = sentence_string;
-                sentence['id'] = sentence_counter.toString();
-                sentence['value'] = temp;
-                for (j = 0; j < dataset[i].length; j++) { // assign value to weight detail, for each sentence in same cluster, do this once
-                    // console.log('Here is what i want to see ' + i + j);
-                    // console.log(dataset[i][j]['id']);
-                    // console.log(math.dot(dataset[i][j]['value'],temp));
-                    foreign_id = dataset[i][j]['id']
+                sentence['string'] = this.sentence_string;
+                sentence['id'] = this.sentence_counter.toString();
+                sentence['value'] = this.temp;
+                for (j = 0; j < this.dataset[i].length; j++) { // assign value to weight detail, for each sentence in same cluster, do this once
+
+                    let foreign_id = dataset[i][j]['id']
                     try{
-                        sentence['detail'][foreign_id] = math.dot(dataset[i][j]['value'],temp);
+                        sentence['detail'][foreign_id] = math.dot(this.dataset[i][j]['value'],temp);
                     }catch(e){
-                        sentence['detail'] = { [foreign_id]: math.dot(dataset[i][j]['value'],temp)};
+                        sentence['detail'] = { [foreign_id]: math.dot(this.dataset[i][j]['value'],temp)};
                     }
                     try{
-                        dataset[i][j]['detail'][sentence_counter] = math.dot(dataset[i][j]['value'],temp);
+                        this.dataset[i][j]['detail'][this.sentence_counter] = math.dot(this.dataset[i][j]['value'],temp);
                     }catch(e){
-                        dataset[i][j]['detail'] =  {[sentence_counter]: math.dot(dataset[i][j]['value'],temp)};
+                        this.dataset[i][j]['detail'] =  {[this.sentence_counter]: math.dot(this.dataset[i][j]['value'],temp)};
                     }
-                    dataset[i][j]['weight'] =  sum(dataset[i][j]['detail']);
-                    // console.log('The inserted sentence detail currrently is:')
-                    // console.log(sentence['detail'])
-                    // console.log('and the related sentence detail is:')
-                    // console.log(dataset[i][j]['detail'])
+                    this.dataset[i][j]['weight'] =  sum(this.dataset[i][j]['detail']);
                 }
                 sentence['weight'] = sum(sentence['detail']);
-                sentence_counter += 1;
-                dataset[i].push(sentence);
-                dataset[i].sort(function(first,second){
+                this.sentence_counter += 1;
+                this.dataset[i].push(sentence);
+                this.dataset[i].sort(function(first,second){
                     return second["weight"] - first["weight"];
                 })
-                //console.log(dataset)
-            } // else they are not similar, go to next cluster
-            //console.log('outside')
-            // create a new cluster
+            } 
         }
-        if (inserted === false) {
-            inserted = true;
-            const temp_cluster = [];
-            var sentence = {};
-            sentence['string'] = sentence_string;
-            sentence['id'] = sentence_counter.toString();
-            sentence['value'] = temp;
-            sentence['weight'] = 0;
-            sentence['detail'] = {}
-            cluster_counter += 1;
-            sentence_counter += 1;
-            temp_cluster.push(sentence);
-            dataset.push(temp_cluster);
-            //console.log(dataset);
+        if (this.inserted === false) {
+            this.inserted = true;
+            this.createCluster(sentence_string,temp)
         }
+    }
+
+}
+const sentences = load_csv();
+let sentence_counter = 0;
+
+const Dataset = new dataset()
+sentences.forEach(async sentence_string => { // simulate question input one-by-one
+    let temp = await USE_generater(sentence_string);// return USE value
+    if (Dataset.getClusterLength == 0) { // if cluster is empty, create a cluster and insert first sentence.
+        Dataset.createCluster(sentence_string,temp)
+    } else { // else there is at least one cluster, compare with it to determine next step
+        Dataset.nextStep(sentence_string,temp)
     }
     console.log('This is final dataset.');
     //console.log(dataset);
-    console.log(util.inspect(dataset, { maxArrayLength: null }))
+    console.log(util.inspect(Dataset.dataset, { maxArrayLength: null }))
 
 });
 // console.log(cluster);
